@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { SectionLabel } from "@/components/SectionLabel";
+import { ArticleFigure } from "@/components/ArticleFigure";
 import { articles, getArticle } from "@/lib/articles";
 
 export function generateStaticParams() {
@@ -92,29 +93,69 @@ export default async function ArticlePage({
         </p>
       </Container>
 
+      {/* The one engineering number the piece stands on. */}
+      <Container className="mt-12">
+        <div className="max-w-2xl rounded-lg border border-line bg-surface px-6 py-7 sm:px-8">
+          <div className="flex items-baseline gap-4">
+            <span className="font-display text-5xl font-medium tracking-tight text-brass">
+              {article.metric.value}
+            </span>
+            <span className="text-sm leading-snug text-muted">
+              {article.metric.label}
+            </span>
+          </div>
+          <p className="mt-4 border-t border-line-soft pt-4 text-sm leading-relaxed text-faint">
+            {article.metric.note}
+          </p>
+        </div>
+      </Container>
+
       {/* Body */}
       <Container as="article" className="mt-16">
         <div className="max-w-2xl space-y-14">
-          {article.sections.map((section) => (
-            <section key={section.heading}>
-              <h2 className="font-display text-2xl font-medium leading-tight tracking-tight text-text">
-                {section.heading}
-              </h2>
-              <div className="mt-5 space-y-5">
-                {section.body.map((p, i) => (
-                  <p key={i} className="leading-relaxed text-muted">
-                    {p}
+          {article.sections.map((section) => {
+            const isFailure = section.kind === "failure";
+            return (
+              <section
+                key={section.heading}
+                className={
+                  isFailure
+                    ? "rounded-lg border border-line-soft bg-surface/60 p-6 sm:p-8"
+                    : undefined
+                }
+              >
+                {isFailure && (
+                  <SectionLabel className="mb-4">Failure mode</SectionLabel>
+                )}
+                <h2 className="font-display text-2xl font-medium leading-tight tracking-tight text-text">
+                  {section.heading}
+                </h2>
+                <div className="mt-5 space-y-5">
+                  {section.body.map((p, i) => (
+                    <p key={i} className="leading-relaxed text-muted">
+                      {p}
+                    </p>
+                  ))}
+                </div>
+                {section.diagram && (
+                  <ArticleFigure diagram={section.diagram} />
+                )}
+                {section.pull && (
+                  <p className="mt-8 border-l-2 border-brass-dim pl-6 font-display text-lg italic leading-relaxed text-text">
+                    {section.pull}
                   </p>
-                ))}
-              </div>
-              {section.pull && (
-                <p className="mt-8 border-l-2 border-brass-dim pl-6 font-display text-lg italic leading-relaxed text-text">
-                  {section.pull}
-                </p>
-              )}
-            </section>
-          ))}
+                )}
+              </section>
+            );
+          })}
         </div>
+      </Container>
+
+      {/* The strong final statement. */}
+      <Container className="mt-16">
+        <p className="max-w-2xl font-display text-2xl font-medium leading-snug tracking-tight text-text sm:text-3xl">
+          {article.closingLine}
+        </p>
       </Container>
 
       {/* Footer nav */}
