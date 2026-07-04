@@ -1,0 +1,61 @@
+## Overview
+
+Booppa is a production, multi-tenant compliance and audit-evidence SaaS. For a given vendor or website it runs automated compliance scans (Singapore PDPA and security posture), uses AI to classify risk and redact sensitive data, then produces signed PDF evidence whose integrity is provable three ways: a deterministic SHA-256 content hash, a hash-chained audit log, and an on-chain timestamp anchored to a Polygon smart contract.
+
+As technical lead I architected and built the whole platform solo: the FastAPI backend (58 routers, 70+ services), the Next.js 14 frontend (139 pages), the Solidity contract, the AI routing, and the AWS deployment.
+
+## The business problem
+
+Compliance evidence has a trust problem. A PDF asserting "we passed the audit" is trivially forgeable and carries no independent proof of when it was true. Buyers, auditors, and regulators cannot verify that a vendor's artifact has not been back-dated or altered.
+
+Booppa's answer is to make every piece of evidence independently verifiable and tamper-evident, so a buyer can confirm, without trusting Booppa, that a specific document existed in a specific state at a specific time. That requires combining content hashing, an append-only audit chain, and an immutable public timestamp, then wrapping it in a product that non-technical compliance teams can actually buy and use.
+
+## Architecture
+
+### The evidence core (the differentiator)
+
+1. **Scan.** A Celery task fetches the target's headers, privacy policy, and cookies (httpx and Playwright), scores 11 PDPA dimensions, and runs AI classifiers, with PII redacted before any external model call.
+2. **Generate.** ReportLab renders a structured evidence PDF, uploaded to S3 with presigned access.
+3. **Hash.** A deterministic SHA-256 of the evidence bytes.
+4. **Hash-chain.** Every action (scan, remediation, anchor) is appended to an `AuditChainEvent` log where each row's `hash_prev` links to the prior event's hash. Altering any event breaks the chain, so the log is tamper-evident by construction.
+5. **Anchor.** The hash is written on-chain through the `EvidenceAnchorV3` Polygon contract, idempotently so duplicate anchors do not re-spend gas, with a deliberate force path for signed cover sheets that must surface a fresh transaction. The transaction is rendered as a QR code linking to Polygonscan for independent verification.
+
+### Backend platform
+
+FastAPI with a dual-mount router, typed JWTs (access, refresh, admin, reset), bcrypt, SAML SSO, and rate limiting. Celery on Redis runs two queues (heavy report and anchor work separated from side effects) and about 14 scheduled jobs through embedded Beat. Multi-tenancy uses organizations, members, and a self-referential parent for subsidiaries.
+
+The Stripe and fulfilment pipeline is the non-trivial design: bundle products that need a buyer brief defer fulfilment. The webhook creates a pending intake, the buyer submits a brief, then the kit-generation task queues, and the result page polls a session-scoped verify endpoint whose signal resolution is ordered carefully to avoid stale-state races.
+
+### Frontend platform
+
+Next.js 14 App Router, 139 pages, server-components-first, with route handlers proxying the FastAPI backend through a single config source of truth. Three middleware-enforced auth zones (vendor, admin, buyer or paid plan) use HMAC-signed plan cookies so paywall state cannot be forged client-side, with transparent JWT refresh on 401. Real-time verification notifications run over socket.io authenticated with a short-lived WS token, so the long-lived JWT never touches the handshake.
+
+### Deployment
+
+Containerized on AWS ECS Fargate behind a Cloudflare Tunnel (no public task IPs), with secrets from AWS Secrets Manager, Alembic migrations on boot, and OpenTelemetry and Prometheus hooks.
+
+## Technologies
+
+Python 3.11, FastAPI, Pydantic v2, PostgreSQL 15 with SQLAlchemy 2.0 and Alembic, Redis 7, Celery 5.3, web3.py with a Solidity `EvidenceAnchorV3` contract on Polygon, ReportLab, Playwright, Stripe, pysaml2 (SAML 2.0), and a provider-agnostic AI layer over Anthropic, OpenAI, DeepSeek, and Ollama. Frontend: Next.js 14, React 18, TypeScript (strict), Tailwind, Recharts, socket.io.
+
+## Hardest problems
+
+**Making evidence trustworthy without asking anyone to trust Booppa.** The three-layer model (content hash, hash-chained log, public on-chain anchor) makes verification independent of the platform.
+
+**Blockchain cost against proof.** Idempotent anchoring skips duplicate gas, batch anchoring writes up to 100 hashes per transaction, and testnet is the default with mainnet on demand.
+
+**Using AI on sensitive compliance data safely.** A provider-agnostic router redacts PII and NRIC before any external call, with a heuristic fallback that runs with zero external calls.
+
+**A correct money-handling pipeline.** The deferred-intake Stripe flow uses session-scoped state resolution and no-store semantics to avoid the classic "paid but nothing fulfilled" and "stuck on generating" race conditions.
+
+## Trade-offs and security
+
+The honest hardening items are the senior signal here. Anchoring uses a single hot-wallet key from Secrets Manager; on mainnet that key controls all anchoring, and the right path is KMS or HSM-backed signing with least privilege and rotation. Testnet anchors are not a durable guarantee, since testnets can reset, so a true immutability claim means anchoring to mainnet, batched to control gas. I name these before an interviewer does, because pre-empting them is itself the maturity the system is meant to show.
+
+## Scale
+
+58 backend routers, 70+ services, and 139 frontend pages, with four AI providers behind one routing boundary, deployed across an ECS and Cloudflare topology with observability wired in.
+
+## What I learned
+
+Owning a whole product as the lead, architecture, backend, frontend, smart contract, AI, payments, and infrastructure, taught me that the discipline is keeping the contracts between layers stable while both sides move. The Stripe verify and result-polling contract was the clearest example: the system only stays correct if that boundary holds.

@@ -1,0 +1,66 @@
+## Overview
+
+SingPost MyPostman is a public feedback and rating platform for Singapore Post. A resident enters their postal code, the system resolves the delivery postman responsible for that address, and the resident rates that postman or submits general feedback. It was built as a custom WordPress theme backing a bespoke relational data model, not a brochure site.
+
+I was the sole developer. I designed the relational schema and built the resolution flow, the public surface, and the admin CMS. This sits at the smaller end of my flagship work: a real product, delivered through an agency, on a constrained platform.
+
+## The business problem
+
+Singapore Post wanted residents to give structured feedback on the actual person who delivers their mail, not a generic contact channel. That creates a specific design problem: a resident identifies by address, but feedback has to attach to a staff member.
+
+- Postmen are assigned to delivery beats (route units), and beats cover sets of postal codes. That mapping is operational data that changes as staff and routes change.
+- The public must never browse or enumerate staff. They should only ever see the one postman who serves the postal code they entered.
+- Submissions come from the open internet, so the system needs spam and abuse protection without putting friction on a genuine resident.
+
+There was also a modernization constraint. The previous platform had been built by an outside partner who stopped supporting it and never handed over full access. The brief was therefore to rebuild the capability on a system the client owns and can run themselves, reconstructing the data model and the resident-facing flow as the sole developer.
+
+## Architecture
+
+### The relational core
+
+Four custom InnoDB tables carry the operational model, created on theme init through `dbDelta`:
+
+- `postman_management`: the staff record (id, name, photo, bases, grade, status, average rating).
+- `beat_management`: the delivery beat, with regional and sub-delivery base codes.
+- `postal_code_management`: the address layer, mapping a postal code to a beat.
+- `postman_beat_assignment`: the join that makes the model work, mapping a staff id to a beat with foreign keys to both tables.
+
+Those foreign keys are what let a single postal code resolve to a single accountable person.
+
+### The resolution flow (the product)
+
+When a resident submits a postal code, the server walks the model in three prepared-statement steps: postal code to beat, beat to assigned staff, staff to public profile. The resident sees only that one postman, and the rating form carries the resolved staff id and postal code as hidden fields so the rating attaches to the right person. Every lookup uses PDO prepared statements, so a postal code from the open internet never reaches SQL as a string.
+
+### Public write endpoints
+
+Two custom REST routes accept submissions. One stores a per-postman rating with valuation tags and an optional message; the other stores general feedback with up to three file attachments and contact details. Both verify a Google reCAPTCHA token server-side before writing, and sanitize every field.
+
+### Admin and data maintenance
+
+Custom post types and meta boxes let staff edit postmen, beats, and postal codes, mirroring their values into the relational tables through prepared statements. Write paths are guarded by nonces and capability checks. A CSV import handler bulk-loads thousands of address-to-route rows so the client maintains the data without hand entry. Submitted feedback is shown in read-only admin tables, so records cannot be quietly altered after submission.
+
+## Technologies
+
+PHP and WordPress (a hand-written custom theme, no page builder), a custom InnoDB relational schema, the WordPress REST API, PDO and `$wpdb` prepared statements, a jQuery and AJAX front end, and Google reCAPTCHA v2.
+
+## Hardest problems
+
+**Rebuilding a live capability without access to the system it replaced.** I treated it as a clean rebuild rather than a migration, reconstructing the operational model from first principles as an owned relational schema, with CSV import so the client could load their own data.
+
+**Letting residents rate a person they cannot name.** Modeling the operational reality (postal code to beat to postman) as a relational schema and resolving it server-side means the resident only supplies an address.
+
+**Accepting writes from the open internet safely.** Server-side reCAPTCHA on both endpoints, full input sanitization, prepared statements on every query, and file-upload limits with unique filenames.
+
+**Keeping staff data private while exposing one accountable postman.** There is no public listing or search; the only way to surface a postman is to resolve a specific postal code, which returns exactly one record.
+
+## Trade-offs and security
+
+The honest review of my own code is part of why this earns a place rather than reading as a brochure site. The reCAPTCHA secret belongs in an environment variable rather than in source, and the public routes lean on reCAPTCHA without rate limiting, which I would add. Schema creation and rewrite-rule flushing should happen on theme activation rather than on every page load. Standardizing on a single database access path, rather than mixing `$wpdb` with a separate PDO connection, would be the maintainability win. Naming these is stronger than hiding them.
+
+## Scale
+
+The system carried thousands of operational records across postmen, beats, and postal-code mappings. That volume is what justified the indexed relational schema and the CSV bulk import; hand entry at that scale is not viable. Usage numbers such as visitor or feedback volume are not claimed, since none are verifiable from the code.
+
+## What I learned
+
+WordPress was the client's platform, so the work was making a CMS behave like a small relational application: a real schema, a resolution flow, secure write APIs, and bulk-maintenance tooling, without fighting the platform. The lesson was that product engineering is mostly about modeling the operational reality correctly, and the platform you are handed is a constraint to work within, not the thing that defines the design.

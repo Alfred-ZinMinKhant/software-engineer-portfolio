@@ -1,0 +1,63 @@
+## Overview
+
+Issara Authorizer is the central identity layer for the Issara Institute's multi-product platform. Instead of each product (Golden Dreams, ILM, Cascade) implementing its own login, this service provides one OAuth2 and OIDC sign-on surface through WorkOS AuthKit, then performs identity federation and enrichment: it authenticates the user once, fetches that user's product-specific profile from each downstream CMS, merges them into a single authorization payload, and correlates the identities back into WorkOS metadata so every product shares one notion of who a user is.
+
+It is stateless and serverless, a Flask app deployed as an AWS Lambda function through CDK, with a multi-account CI/CD pipeline. It is the keystone that explains why WorkOS authentication appears consistently across every other system in this portfolio.
+
+## The business problem
+
+Issara runs several distinct products for the same community of workers, suppliers, partners, and staff. Each product had, or would have, its own login, user model, and session handling. That fragments identity in three ways:
+
+- A user who exists in both Golden Dreams and ILM has two disconnected accounts and two logins.
+- There is no single place to revoke a compromised session across products.
+- Each app re-implements OAuth, JWT verification, and CORS, duplicated and inconsistently secured.
+
+The need was one gateway that signs a user in once, reconciles their identity across products, and hands each product a consistent, enriched authorization context, without becoming a stateful single point of failure.
+
+## Architecture
+
+### Sign-on and federation flow
+
+1. `GET /login` redirects to the WorkOS AuthKit authorization URL.
+2. The user authenticates at WorkOS (Google, Microsoft, or AuthKit forms), which returns an authorization code.
+3. `/auth/callback` exchanges the code for tokens, then enriches: it calls each downstream product's user-info endpoint with the user's email and bearer token, normalizes both payloads, and merges them into one authorization object (active flags, groups, user type, partner, organization, supplier, plus per-product links).
+4. Identity correlation is persisted back to the WorkOS user's metadata. This write is non-blocking, so a metadata failure never breaks login.
+5. The response hands the frontend a single session, user, authorization, and links payload: one login, unified identity.
+
+### Token verification (the security core)
+
+Protected requests are verified with RS256 against the WorkOS JWKS, with issuer validation reconstructed from the client ID. The unsigned decode used only to display token expiry is kept separate from the signature-verified decode that authorizes requests, a subtle but correct security boundary.
+
+### Centralized session management
+
+`/logout` extracts the session id from the verified token and revokes it through WorkOS. `/auth/logout/others` enumerates the user's active sessions and revokes every one except the current, a real "sign out everywhere else" capability that only a central gateway can offer.
+
+### Deployment
+
+Packaged as an AWS Lambda function through CDK with a dead-letter queue and retries. GitHub Actions deploys staging then production, assuming roles in separate AWS accounts through OIDC, with no long-lived cloud keys.
+
+## Technologies
+
+Python 3, Flask 3, WorkOS AuthKit (OAuth2 and OIDC), PyJWT with `PyJWKClient` (RS256 via JWKS), AWS Lambda, AWS CDK, and GitHub Actions OIDC, deployed in `ap-southeast-1`.
+
+## Hardest problems
+
+**Unifying identity across independent products with no shared database.** Federate at login: WorkOS is the auth source, each product's CMS is the profile source, and WorkOS metadata is the shared correlation ledger. There is no new central user database to own or keep in sync.
+
+**Staying available when a downstream product is slow or down.** Every CMS call has a timeout and degrades gracefully: a failed fetch yields null for that product rather than failing the whole login, and metadata persistence is fire-and-forget.
+
+**Consistent, correct token security across the ecosystem.** One JWKS and RS256 verification with issuer validation that every product trusts, instead of three divergent implementations.
+
+**Secure, keyless multi-account deployment.** Serverless Lambda and CDK with GitHub Actions OIDC assuming per-account roles, so there are no static cloud credentials in CI.
+
+## Trade-offs and security
+
+The gateway sits on the login critical path, which is the deliberate cost of centralizing identity. Statelessness and graceful degradation are the answer: the service holds no session state of its own, and a downstream outage produces partial identity rather than a failed login. The honest next steps from a code review are caching JWKS with a TTL (the other Issara services already do this) and parallelizing the downstream profile calls to roughly halve callback latency.
+
+## Scale
+
+Three products federated behind one stateless sign-on surface, across two AWS accounts (staging and production), serving the same identity model that ILM and Cascade consume.
+
+## What I learned
+
+Designing a service that several teams depend on raises the bar on two things at once: availability and backward-compatible identity contracts. Every product trusts this gateway for auth, so statelessness and graceful degradation were not optimizations but requirements, chosen so the keystone could never become the single point that brings the platform down.

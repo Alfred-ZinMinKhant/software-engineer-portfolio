@@ -1,0 +1,53 @@
+## Overview
+
+Cascade is the modernized analytics and engagement product for the Issara Institute's labor-rights platform. It re-platforms the labor dashboards, KPI analytics, supplier intelligence, and partner and worker engagement surfaces of the legacy ILM system onto a clean Node.js and TypeScript backend (`cascade-api`) with a modern React and Vite frontend (`ILM-facelift`).
+
+I led the backend re-platform from Python and Django to Node and TypeScript, and owned authentication, security, and the new frontend. The defining decision was how to ship a modern product over a live legacy system without a high-risk rewrite.
+
+## The business problem
+
+The legacy ILM frontend was a purchased React 16 and Material-UI template: heavy, dated, and hard to extend for the multi-stakeholder analytics Issara needed. The Django monolith mixed transactional and analytical concerns. The platform needed three things at once:
+
+- A fast, maintainable UI where suppliers, buyers, recruiters, and internal staff each see a role-scoped view of the same data.
+- New engagement features (community message boards, polls, worker notifications, grievance diagnostics, solution and training catalogs) that did not fit the legacy model cleanly.
+- All of this without destabilizing the production system that real remediation work depends on.
+
+## Architecture
+
+Cascade follows a strangler-fig modernization. Rather than a big-bang rewrite, the new TypeScript backend connects live and read-only to the legacy ILM (Django and MySQL) and Golden Dreams databases, while owning a new primary database for net-new features. That let the product ship modern UX and new capability immediately, without first migrating a 114-model legacy schema.
+
+The decision worth showing is the persistence model. `cascade-api` opens three independent Sequelize connections. The primary Cascade database is required; the two legacy connections are optional. If either is unreachable at boot, the server logs a warning, sets an availability flag, and keeps serving. That is what makes the strangler-fig approach safe: the new system reads legacy data without being taken down by it, and net-new features live in a schema the team fully controls.
+
+### Request and data flow
+
+1. The SPA authenticates through WorkOS AuthKit (OIDC). The callback route exchanges the code, validates the JWT, normalizes the WorkOS role to an internal slug, and handshakes with the backend to sync membership and role.
+2. The API client attaches the bearer token, hints the linked Django user with `X-ILM-User-Id` (the same identity bridge the legacy system uses), and transparently decrypts AES-256-GCM response payloads.
+3. The `workosAuth` middleware verifies the RS256 signature against client-scoped JWKS (4-hour cache with forced refresh on key miss), validates issuer, client, and organization, checks expiry, and rotates the token pair for opaque refresh tokens.
+4. Controllers validate input with Zod, delegate to pure-logic services, and query Sequelize models. Labor and KPI reads hit the legacy connection; new features hit the primary database.
+5. The frontend renders role-scoped dashboards through TanStack Query, persisted to IndexedDB for offline use, with a sync service that replays queued mutations when the client is back online.
+
+## Technologies
+
+**Backend:** Node.js, TypeScript 5 (strict), Express 4, Sequelize 6 with mysql2, Zod, Pino, Helmet, WorkOS AuthKit, multi-stage Docker.
+
+**Frontend:** React 19, Vite, TanStack Router, Query, and Table, Zustand, Dexie (IndexedDB offline) with a custom sync service, WorkOS AuthKit React, Flagsmith feature flags, i18next, Recharts, ECharts, and React-Leaflet, with Vitest and Playwright coverage.
+
+## Hardest problems
+
+**Justifying and executing a cross-language re-platform.** I evaluated modernizing the existing Django app first and concluded that continuing on the TypeScript backend was the lower-risk path. The Django app carried years of tightly coupled logic and aging dependencies, and the team had already built a modern TypeScript backend on the same MySQL database, so porting those gains back into Django would have duplicated work. Because both systems shared the database, endpoints could migrate incrementally, with no risky database migration and no extended downtime.
+
+**Sharing one source of truth across two backends.** Read-only legacy connections plus an entity-reconciliation pipeline (OpenAI embeddings and Jaccard similarity) match records across systems so supplier identities do not diverge.
+
+**Consistent enterprise auth on a new stack.** I re-implemented the WorkOS verification model at the crypto level in Node (JWKS, issuer, client, and org checks, token rotation), keeping the same identity bridge and escalation discipline as the Django side.
+
+## Trade-offs and security
+
+The frontend decrypts AES-256-GCM response payloads, which means the key reaches the client. I never treated this as a TLS replacement or as confidentiality against a controlled browser. Its real goals were narrower and honest: tamper detection through GCM authentication, deterring casual inspection of API responses, and meeting internal security expectations for sensitive payloads. Transport security still comes from TLS. Being precise about that threat model is the point; it shows the reasoning, not just the cipher.
+
+## Scale
+
+The domain covers 10,000+ suppliers and 500,000+ workers across global supply chains. The backend spans 39 route modules and 35 migrations, with three database connections under graceful degradation.
+
+## What I learned
+
+The rarest signal in this work was not building a system but deciding how to change one safely. Choosing incremental strangler-fig over a rewrite, and accepting a polyglot data layer to get there, was a judgment call about risk on a platform people depend on. That judgment, more than any single technology, is what the project taught me to value.

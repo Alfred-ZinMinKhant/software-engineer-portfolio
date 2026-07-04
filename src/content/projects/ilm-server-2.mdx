@@ -1,0 +1,56 @@
+## Overview
+
+ILM Platform is the enterprise backend powering the Issara Institute's labor-rights monitoring and worker-grievance remediation platform across Southeast Asian supply chains. It is a multi-tenant Django and DRF system that ingests worker feedback, tracks grievance cases and their remediation quality, measures labor-standards KPIs against international codes, and exposes role-scoped dashboards to suppliers, strategic partners, civil-society organizations, and Issara staff.
+
+I owned backend and API architecture, authentication and security, and built the React dashboard frontend. The platform tracks 10,000+ suppliers and 500,000+ workers across global supply chains, on a domain of 114+ relational models.
+
+## The business problem
+
+Forced labor, debt bondage, recruitment-fee abuse, and wage theft are systemic and hard to surface. Workers report issues through hotlines (LINE, WhatsApp, Zalo, SMS, voice) in multiple languages. Those reports have to be triaged into cases, tracked through remediation, scored for quality of outcome, and rolled up into KPIs that buyers and partners can act on.
+
+The domain is multi-stakeholder, multi-tenant, multi-currency, multi-language, and compliance-sensitive. Each organization type must see only what it is entitled to. Outcomes such as recruitment fees reimbursed in THB, MMK, MYR, or USD must be auditable. Reporting has to be fast and trustworthy, because it informs real commercial and human-rights decisions.
+
+## Architecture
+
+### Request flow
+
+1. The frontend obtains a WorkOS AuthKit access token and sends it as a bearer credential.
+2. `WorkOSAuthKitAuthentication`, a DRF auth backend, reads the unverified header and only handles RS256 WorkOS tokens. For anything else it returns nothing and lets legacy Django and JWT-2FA auth run, which is what made the migration non-breaking.
+3. It resolves the signing key from client-scoped JWKS (configured URL plus issuer-derived fallbacks), with an in-process 4-hour cache and a forced-refresh pass to handle key rotation.
+4. It verifies signature, issuer, and expiry, then resolves the token to a real Django user (by numeric id hint, a WorkOS-to-Django link table, or email), so all existing group-based view logic keeps working.
+5. Authorization checks Django groups and WorkOS role slugs together. Public and partner reads are allowed with staff-only writes.
+6. The `cascade` read module runs aggregation queries for dashboards and charts; reference-data endpoints add ETag, cache-control, and vary headers.
+
+### Security highlights
+
+The `X-ILM-User-Id` header hint is only honored when the validated JWT already carries an Issara internal role slug, so a non-staff token cannot impersonate a staff Django user. Identity resolution is defense-in-depth: link table, then email fallback, then auto-link persistence so repeated requests skip the slow path. WorkOS RS256 and legacy JWT-2FA are validated side by side, which enabled a zero-downtime auth migration.
+
+### Data model
+
+`Case` references `Supplier` and joins `Kpi` many-to-many; `SupplierKpi` adds remediation tracking (progress, closed-quality rating, multi-currency amounts owed and paid, deadlines). A `Policy` belongs to either a supplier or a strategic partner, enforced by a database check constraint, with audience scoping. A denormalized worker-count rollup (11 nationalities by gender) is kept in sync by a post-save signal.
+
+## Technologies
+
+Python 3.8, Django 3.2 LTS, Django REST Framework, WorkOS AuthKit with SimpleJWT and drf-jwt-2fa, python-jose (RS256 and JWKS), MySQL 8 with django-simple-history audit trails, Google App Engine, AWS S3 and ECR, and GitHub Actions CI/CD.
+
+## Hardest problems
+
+**Auth provider migration without downtime.** An auth backend that no-ops on non-WorkOS tokens, plus a WorkOS-to-Django user bridge, let legacy authorization logic keep working untouched while WorkOS rolled out behind config.
+
+**JWKS key rotation and resilience.** External IdP keys rotate, and a stale cache would lock everyone out, so the design uses multi-URL JWKS resolution, a TTL cache, and a forced-refresh fallback on cache miss.
+
+**Trustworthy multi-tenant authorization.** A defensive staff check reconciles Django groups with WorkOS role claims while staying safe against lightweight, non-Django user objects, backed by the header-hint escalation guard.
+
+**Read-heavy analytics over a large relational model.** A dedicated stateless read service with ETag and HTTP caching on reference data serves the dashboards, KPI time-series, and geospatial views buyers rely on.
+
+## Trade-offs and security
+
+The clearest engineering-improvement story is the dashboard endpoint, which originally fired dozens of independent aggregate queries (one per gender, nationality, and KPI category) and computed closure time in Python by iterating every closed case. Consolidating into conditional aggregation and pushing closure-time computation into the database cuts query volume and per-request work. Framed as a design optimization rather than a numeric claim, it is the honest performance narrative for the system.
+
+## Scale
+
+10,000+ suppliers and 500,000+ workers tracked across global supply chains, on a 114+ model relational schema with audit history, XOR-constrained ownership, and multi-currency remediation tracking.
+
+## What I learned
+
+Leading a high-stakes change on human-rights-critical data taught me to value backward-compatible coexistence over a clean cutover. Choosing dual-provider auth over a big-bang migration meant access never broke for any organization type, and that constraint, not the cleanest possible design, was the right one to optimize for.
