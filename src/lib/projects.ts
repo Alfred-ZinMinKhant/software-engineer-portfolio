@@ -87,7 +87,7 @@ export const flagships: Project[] = [
     ],
     metrics: [
       { value: "58", label: "backend routers" },
-      { value: "139", label: "frontend pages" },
+      { value: "139", label: "App Router routes" },
       { value: "4", label: "AI providers routed" },
     ],
     liveUrl: "https://booppa.io/",

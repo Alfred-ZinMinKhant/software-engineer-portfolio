@@ -2,7 +2,7 @@
 
 Booppa is a production, multi-tenant compliance and audit-evidence SaaS. For a given vendor or website it runs automated compliance scans (Singapore PDPA and security posture), uses AI to classify risk and redact sensitive data, then produces signed PDF evidence whose integrity is provable three ways: a deterministic SHA-256 content hash, a hash-chained audit log, and an on-chain timestamp anchored to a Polygon smart contract.
 
-As technical lead I architected and built the whole platform solo: the FastAPI backend (58 routers, 70+ services), the Next.js 14 frontend (139 pages), the Solidity contract, the AI routing, and the AWS deployment.
+As technical lead I architected and built the whole platform solo: the FastAPI backend (58 routers, 70+ services), the Next.js 14 frontend (139 App Router routes), the Solidity contract, the AI routing, and the AWS deployment.
 
 ## The business problem
 
@@ -28,7 +28,7 @@ The Stripe and fulfilment pipeline is the non-trivial design: bundle products th
 
 ### Frontend platform
 
-Next.js 14 App Router, 139 pages, server-components-first, with route handlers proxying the FastAPI backend through a single config source of truth. Three middleware-enforced auth zones (vendor, admin, buyer or paid plan) use HMAC-signed plan cookies so paywall state cannot be forged client-side, with transparent JWT refresh on 401. Real-time verification notifications run over socket.io authenticated with a short-lived WS token, so the long-lived JWT never touches the handshake.
+Next.js 14 App Router, 139 routes, server-components-first, deliberately a thin shell: it holds no business logic and proxies all dynamic work to the FastAPI backend through a single config source of truth (113 route handlers rewrite the versioned API and CMS paths). On a compliance product, logic that drifts between two services is a correctness bug with legal weight, so the frontend owns presentation and routing only. Authentication is centralized in one `middleware.ts` gate that fails closed against a public allowlist, enforcing four zones (vendor, admin, government buyer or paid plan, and CSP). The paywall reads an HMAC-signed plan cookie so entitlement cannot be forged client-side, while the heaviest entitlement is still confirmed server-side. One detail that reads as real engineering: `/csp` is matched exactly rather than by prefix, because a naive `startsWith('/csp')` would have exposed `/csp/dashboard` to unauthenticated users. JWT refresh is transparent on 401, and real-time verification notifications run over socket.io authenticated with a short-lived WS token, so the long-lived JWT never touches the handshake.
 
 ### Deployment
 
@@ -54,7 +54,7 @@ The honest hardening items are the senior signal here. Anchoring uses a single h
 
 ## Scale
 
-58 backend routers, 70+ services, and 139 frontend pages, with four AI providers behind one routing boundary, deployed across an ECS and Cloudflare topology with observability wired in.
+58 backend routers, 70+ services, and 139 frontend App Router routes, with four AI providers behind one routing boundary, deployed across an ECS and Cloudflare topology with observability wired in.
 
 ## What I learned
 
