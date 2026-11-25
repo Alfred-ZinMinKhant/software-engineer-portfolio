@@ -120,40 +120,40 @@ export const articles: Article[] = [
           svg: `<svg viewBox="0 0 720 340" width="100%" height="auto" role="img" aria-label="Clients reach both a Node backend and a Django backend; both share one legacy MySQL database, while the Node backend also owns a separate Cascade database" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
   <defs>
     <marker id="af-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" fill="#6f5d3c" />
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--color-brass-dim)" />
     </marker>
   </defs>
   <!-- Clients -->
-  <rect x="24" y="132" width="120" height="60" rx="7" fill="#171d29" stroke="#222c3a" />
-  <text x="84" y="167" fill="#e8ebf1" font-size="14" text-anchor="middle">Clients</text>
+  <rect x="24" y="132" width="120" height="60" rx="7" fill="var(--color-raised)" stroke="var(--color-line)" />
+  <text x="84" y="167" fill="var(--color-text)" font-size="14" text-anchor="middle">Clients</text>
   <!-- Node backend -->
-  <rect x="268" y="46" width="196" height="66" rx="7" fill="#171d29" stroke="#6f5d3c" />
-  <text x="366" y="76" fill="#e8ebf1" font-size="14" text-anchor="middle">Node · TypeScript</text>
-  <text x="366" y="96" fill="#c6a368" font-size="11.5" text-anchor="middle">Cascade (new)</text>
+  <rect x="268" y="46" width="196" height="66" rx="7" fill="var(--color-raised)" stroke="var(--color-brass-dim)" />
+  <text x="366" y="76" fill="var(--color-text)" font-size="14" text-anchor="middle">Node · TypeScript</text>
+  <text x="366" y="96" fill="var(--color-brass)" font-size="11.5" text-anchor="middle">Cascade (new)</text>
   <!-- Django backend -->
-  <rect x="268" y="216" width="196" height="66" rx="7" fill="#171d29" stroke="#222c3a" />
-  <text x="366" y="246" fill="#e8ebf1" font-size="14" text-anchor="middle">Django monolith</text>
-  <text x="366" y="266" fill="#939db0" font-size="11.5" text-anchor="middle">legacy</text>
+  <rect x="268" y="216" width="196" height="66" rx="7" fill="var(--color-raised)" stroke="var(--color-line)" />
+  <text x="366" y="246" fill="var(--color-text)" font-size="14" text-anchor="middle">Django monolith</text>
+  <text x="366" y="266" fill="var(--color-muted)" font-size="11.5" text-anchor="middle">legacy</text>
   <!-- Cascade primary DB -->
-  <rect x="560" y="40" width="140" height="58" rx="7" fill="#12161f" stroke="#222c3a" />
-  <text x="630" y="66" fill="#e8ebf1" font-size="12.5" text-anchor="middle">Cascade DB</text>
-  <text x="630" y="84" fill="#939db0" font-size="10.5" text-anchor="middle">new features</text>
+  <rect x="560" y="40" width="140" height="58" rx="7" fill="var(--color-surface)" stroke="var(--color-line)" />
+  <text x="630" y="66" fill="var(--color-text)" font-size="12.5" text-anchor="middle">Cascade DB</text>
+  <text x="630" y="84" fill="var(--color-muted)" font-size="10.5" text-anchor="middle">new features</text>
   <!-- Shared legacy DB -->
-  <rect x="560" y="170" width="140" height="72" rx="7" fill="#12161f" stroke="#c6a368" />
-  <text x="630" y="200" fill="#e8ebf1" font-size="12.5" text-anchor="middle">Shared MySQL</text>
-  <text x="630" y="218" fill="#939db0" font-size="10.5" text-anchor="middle">ILM +</text>
-  <text x="630" y="232" fill="#939db0" font-size="10.5" text-anchor="middle">Golden Dreams</text>
+  <rect x="560" y="170" width="140" height="72" rx="7" fill="var(--color-surface)" stroke="var(--color-brass)" />
+  <text x="630" y="200" fill="var(--color-text)" font-size="12.5" text-anchor="middle">Shared MySQL</text>
+  <text x="630" y="218" fill="var(--color-muted)" font-size="10.5" text-anchor="middle">ILM +</text>
+  <text x="630" y="232" fill="var(--color-muted)" font-size="10.5" text-anchor="middle">Golden Dreams</text>
   <!-- Edges: clients to both backends -->
-  <path d="M144 156 L262 92" stroke="#6f5d3c" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
-  <path d="M144 168 L262 246" stroke="#6f5d3c" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
+  <path d="M144 156 L262 92" stroke="var(--color-brass-dim)" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
+  <path d="M144 168 L262 246" stroke="var(--color-brass-dim)" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
   <!-- Node to its own DB: required -->
-  <path d="M464 74 L554 70" stroke="#c6a368" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
-  <text x="508" y="56" fill="#939db0" font-size="10" text-anchor="middle">required</text>
+  <path d="M464 74 L554 70" stroke="var(--color-brass)" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
+  <text x="508" y="56" fill="var(--color-muted)" font-size="10" text-anchor="middle">required</text>
   <!-- Node to shared DB: fail-soft -->
-  <path d="M464 96 L554 196" stroke="#6f5d3c" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#af-arw)" />
-  <text x="524" y="140" fill="#939db0" font-size="10" text-anchor="middle">fail-soft</text>
+  <path d="M464 96 L554 196" stroke="var(--color-brass-dim)" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#af-arw)" />
+  <text x="524" y="140" fill="var(--color-muted)" font-size="10" text-anchor="middle">fail-soft</text>
   <!-- Django to shared DB -->
-  <path d="M464 250 L554 214" stroke="#6f5d3c" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
+  <path d="M464 250 L554 214" stroke="var(--color-brass-dim)" stroke-width="1.5" fill="none" marker-end="url(#af-arw)" />
 </svg>`,
         },
       },

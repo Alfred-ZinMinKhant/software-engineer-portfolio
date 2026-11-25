@@ -1,5 +1,5 @@
+import { Button } from "@/components/Button";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Container } from "@/components/Container";
 import { SectionLabel } from "@/components/SectionLabel";
 import { roles, skillGroups, education, awards } from "@/lib/experience";
@@ -137,12 +137,9 @@ export default function ExperiencePage() {
               Read the resume online, or take the PDF into an interview.
             </p>
           </div>
-          <Link
-            href="/resume"
-            className="shrink-0 rounded-md bg-brass px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-brass-bright"
-          >
+          <Button href="/resume" className="shrink-0">
             Read the resume
-          </Link>
+          </Button>
         </div>
       </Container>
     </div>

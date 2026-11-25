@@ -1,3 +1,4 @@
+import { Button } from "@/components/Button";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -115,17 +116,12 @@ export default async function CaseStudyPage({
           )}
 
           {project.liveUrl && (
-            <a
-              href={project.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-8 inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm text-text transition-colors hover:border-brass hover:text-brass-bright"
-            >
+            <Button href={project.liveUrl} target="_blank" rel="noopener noreferrer" variant="secondary" size="sm" className="mt-8">
               Visit the live product
               <span aria-hidden="true" className="text-faint">
                 {"[live]"}
               </span>
-            </a>
+            </Button>
           )}
         </div>
       </Container>

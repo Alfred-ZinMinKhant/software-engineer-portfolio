@@ -1,3 +1,4 @@
+import { Button } from "@/components/Button";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/Container";
@@ -108,18 +109,12 @@ export default function ArticlesPage() {
 				</div>
 
 				<div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-3">
-					<Link
-						href="/projects"
-						className="rounded-md bg-brass px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-brass-bright"
-					>
+					<Button href="/projects">
 						Read the case studies
-					</Link>
-					<Link
-						href="/architecture"
-						className="rounded-md border border-line px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-brass hover:text-brass-bright"
-					>
+					</Button>
+					<Button href="/architecture" variant="secondary">
 						Browse the architecture map
-					</Link>
+					</Button>
 				</div>
 			</Container>
 		</div>

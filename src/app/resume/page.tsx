@@ -1,3 +1,4 @@
+import { Button } from "@/components/Button";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/Container";
@@ -30,16 +31,12 @@ export default function ResumePage() {
             </h1>
             <p className="mt-3 text-lg text-brass">{site.role}</p>
           </div>
-          <a
-            href={resumePdf}
-            download
-            className="inline-flex shrink-0 items-center gap-2 rounded-md bg-brass px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-brass-bright"
-          >
+          <Button href={resumePdf} download className="shrink-0">
             Download PDF
-            <span aria-hidden="true" className="text-ink/60">
+            <span aria-hidden="true" className="text-on-brass/60">
               {"[pdf]"}
             </span>
-          </a>
+          </Button>
         </div>
 
         <p className="mt-8 max-w-3xl text-lg leading-relaxed text-muted">
@@ -105,13 +102,9 @@ export default function ResumePage() {
               <p className="leading-relaxed text-muted">
                 Your browser cannot display the embedded PDF.
               </p>
-              <a
-                href={resumePdf}
-                download
-                className="mt-5 inline-flex rounded-md bg-brass px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-brass-bright"
-              >
+              <Button href={resumePdf} download className="mt-5">
                 Download the resume instead
-              </a>
+              </Button>
             </div>
           </object>
         </div>

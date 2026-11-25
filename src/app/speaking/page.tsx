@@ -1,5 +1,5 @@
+import { Button } from "@/components/Button";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Container } from "@/components/Container";
 import { SectionLabel } from "@/components/SectionLabel";
 import { site } from "@/lib/site";
@@ -55,12 +55,9 @@ export default function SpeakingPage() {
         </div>
 
         <div className="mt-10">
-          <Link
-            href="/contact"
-            className="inline-flex rounded-md bg-brass px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-brass-bright"
-          >
+          <Button href="/contact">
             Invite me to speak
-          </Link>
+          </Button>
           <p className="mt-4 text-sm text-muted">
             Or email me directly at{" "}
             <a

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { NavLink } from "./NavLink";
 import { nav } from "@/lib/site";
 
 // Mobile navigation. The desktop nav is hidden under md, so without this the
@@ -15,9 +15,13 @@ export function MobileMenu() {
 
   // Close on navigation. The panel links change the route without unmounting
   // the header, so the open state would otherwise persist across pages.
-  useEffect(() => {
+  // Adjusted during render (React's documented alternative to an effect) so
+  // the stale open panel never paints for a frame on the new route.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Escape closes; lock body scroll while the panel covers the page.
   useEffect(() => {
@@ -42,7 +46,7 @@ export function MobileMenu() {
         aria-expanded={open}
         aria-controls="mobile-menu"
         aria-label={open ? "Close menu" : "Open menu"}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-line text-text transition-colors hover:border-brass hover:text-brass-bright"
+        className="flex h-9 w-9 items-center justify-center rounded-md border border-line text-text transition-colors hover:border-brass hover:text-brass-bright active:border-brass-dim"
       >
         <span aria-hidden="true" className="relative block h-3 w-4">
           <span
@@ -71,17 +75,14 @@ export function MobileMenu() {
           <ul className="mx-auto w-full max-w-5xl px-6 py-4 sm:px-8">
             {nav.map((item, i) => (
               <li key={item.href} className="border-b border-line-soft">
-                <Link
-                  href={item.href}
-                  className="flex items-baseline gap-4 py-4 text-text transition-colors hover:text-brass-bright"
-                >
+                <NavLink href={item.href} className="flex items-baseline gap-4 py-4">
                   <span className="font-mono text-xs text-faint">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="font-display text-2xl tracking-tight">
                     {item.label}
                   </span>
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>

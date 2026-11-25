@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { NavLink } from "./NavLink";
 import { Container } from "./Container";
 import { footerNav, site, socials } from "@/lib/site";
 
@@ -24,12 +24,9 @@ export function Footer() {
             <ul className="space-y-2">
               {footerNav.map((item) => (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-muted transition-colors hover:text-text"
-                  >
+                  <NavLink href={item.href} className="text-sm">
                     {item.label}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>
@@ -42,7 +39,7 @@ export function Footer() {
                 <li key={s.label}>
                   <a
                     href={s.href}
-                    className="text-sm text-muted transition-colors hover:text-text"
+                    className="link-quiet text-sm transition-colors"
                     target={s.href.startsWith("http") ? "_blank" : undefined}
                     rel={s.href.startsWith("http") ? "noopener noreferrer" : undefined}
                   >

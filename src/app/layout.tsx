@@ -86,9 +86,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-ink text-text">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -97,7 +103,7 @@ export default function RootLayout({
         />
         <a
           href="#main"
-          className="sr-only z-[60] rounded-md bg-brass px-4 py-2 text-sm font-medium text-ink focus:not-sr-only focus:absolute focus:left-4 focus:top-3"
+          className="sr-only z-[60] rounded-md bg-brass px-4 py-2 text-sm font-medium text-on-brass focus:not-sr-only focus:absolute focus:left-4 focus:top-3"
         >
           Skip to content
         </a>

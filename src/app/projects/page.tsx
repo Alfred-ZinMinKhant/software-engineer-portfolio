@@ -1,5 +1,5 @@
+import { Button } from "@/components/Button";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Container } from "@/components/Container";
 import { SectionLabel } from "@/components/SectionLabel";
 import { ProjectCard } from "@/components/ProjectCard";
@@ -105,12 +105,9 @@ export default function ProjectsPage() {
             The resume covers the same work at a glance, with the verified scope
             and the stack for each system.
           </p>
-          <Link
-            href="/resume"
-            className="mt-7 inline-flex rounded-md bg-brass px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-brass-bright"
-          >
+          <Button href="/resume" className="mt-7">
             Read the resume
-          </Link>
+          </Button>
         </div>
       </Container>
     </div>

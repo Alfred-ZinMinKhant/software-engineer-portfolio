@@ -1,3 +1,4 @@
+import { Button } from "@/components/Button";
 import Link from "next/link";
 import { Container } from "@/components/Container";
 import { BlueprintHero } from "@/components/BlueprintHero";
@@ -50,18 +51,12 @@ export default function Home() {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-4">
-            <Link
-              href="/projects"
-              className="rounded-md bg-brass px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-brass-bright"
-            >
+            <Button href="/projects">
               View projects
-            </Link>
-            <Link
-              href="/resume"
-              className="rounded-md border border-line px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-brass hover:text-brass-bright"
-            >
+            </Button>
+            <Button href="/resume" variant="secondary">
               Read the resume
-            </Link>
+            </Button>
             <span className="mx-1 hidden h-5 w-px bg-line sm:inline-block" />
             <Link
               href="/contact"
@@ -90,15 +85,15 @@ export default function Home() {
       </BlueprintHero>
 
       {/* Metrics */}
-      <Container as="section" aria-label="Career in numbers" className="py-16">
+      <Container as="section" aria-label="Career in numbers" className="section-y">
         <MetricRow metrics={headlineMetrics} />
       </Container>
 
       {/* About */}
-      <Container as="section" className="py-16">
+      <Container as="section" className="section-y">
         <SectionLabel index="01">Background</SectionLabel>
         <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_1.4fr]">
-          <h2 className="font-display text-3xl font-medium leading-tight tracking-tight text-text sm:text-4xl">
+          <h2 className="type-section">
             I learned engineering by being responsible for the result.
           </h2>
           <div className="space-y-5 text-lg leading-relaxed text-muted">
@@ -126,9 +121,9 @@ export default function Home() {
       </Container>
 
       {/* Timeline */}
-      <Container as="section" className="py-16">
+      <Container as="section" className="section-y">
         <SectionLabel index="02">Trajectory</SectionLabel>
-        <h2 className="mt-8 max-w-2xl font-display text-3xl font-medium leading-tight tracking-tight text-text sm:text-4xl">
+        <h2 className="mt-8 max-w-2xl type-section">
           From freelance to architecture, one system at a time.
         </h2>
         <div className="mt-12">
@@ -137,11 +132,11 @@ export default function Home() {
       </Container>
 
       {/* Featured projects */}
-      <Container as="section" className="py-16">
+      <Container as="section" className="section-y">
         <div className="flex items-end justify-between gap-6">
           <div>
             <SectionLabel index="03">Selected work</SectionLabel>
-            <h2 className="mt-8 max-w-2xl font-display text-3xl font-medium leading-tight tracking-tight text-text sm:text-4xl">
+            <h2 className="mt-8 max-w-2xl type-section">
               The five systems I would want you to judge me on.
             </h2>
           </div>

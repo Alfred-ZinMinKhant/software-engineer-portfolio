@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Container } from "./Container";
 import { MobileMenu } from "./MobileMenu";
+import { NavLink } from "./NavLink";
+import { ThemeToggle } from "./ThemeToggle";
 import { nav, site } from "@/lib/site";
 
 // Top chrome. Quiet by design: a wordmark, the section links, and one
@@ -22,17 +24,17 @@ export function Nav() {
         <ul className="hidden items-center gap-6 md:flex">
           {nav.map((item) => (
             <li key={item.href}>
-              <Link
-                href={item.href}
-                className="text-sm text-muted transition-colors hover:text-text"
-              >
+              <NavLink href={item.href} className="text-sm">
                 {item.label}
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>
 
-        <MobileMenu />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <MobileMenu />
+        </div>
       </Container>
     </header>
   );

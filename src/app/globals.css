@@ -22,6 +22,8 @@
   --color-brass: #c6a368;
   --color-brass-bright: #d8b87e;
   --color-brass-dim: #6f5d3c;
+  --color-brass-press: #a98b55; /* pressed primary */
+  --color-on-brass: #0b0e14; /* text sitting on a brass fill */
 
   /* mapped defaults */
   --color-background: var(--color-ink);
@@ -35,12 +37,49 @@
   /* type scale */
   --text-7xl: 4.5rem;
   --text-8xl: 6rem;
+
+  /* motion (Astryx: weight determines timing; settle, never bounce) */
+  --ease-settle: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: var(--ease-settle);
+  --duration-feedback: 150ms; /* hover, press: lightest response */
+  --duration-enter: 280ms; /* entrances, reveals */
+
+  /* spatial tiers (Astryx: separation grows with grouping level) */
+  --space-local: 0.5rem; /* label to value */
+  --space-group: 1.5rem; /* peer items */
+  --space-section: 6rem; /* distinct concerns, survives the squint test */
+}
+
+/* Light theme (Astryx: a theme is a set of custom-property overrides, no
+   component forks). Warm paper + deeper brass; every pair re-checked for AA.
+   Dark stays the default and the identity; light is opt-in via the toggle. */
+:root[data-theme="light"] {
+  --color-ink: #f6f3ec;
+  --color-surface: #fbf9f4;
+  --color-raised: #efeadf;
+  --color-line: #d6cebd;
+  --color-line-soft: #e5dfd1;
+
+  --color-text: #14181f;
+  --color-muted: #475062;
+  --color-faint: #5d6678;
+
+  --color-brass: #85642a;
+  --color-brass-bright: #664a17;
+  --color-brass-dim: #b8a06c;
+  --color-brass-press: #523a10;
+  --color-on-brass: #fbf9f4;
 }
 
 @layer base {
   html {
     color-scheme: dark;
     scroll-behavior: smooth;
+  }
+
+  html[data-theme="light"] {
+    color-scheme: light;
   }
 
   body {
@@ -53,7 +92,7 @@
 
   ::selection {
     background: var(--color-brass);
-    color: var(--color-ink);
+    color: var(--color-on-brass);
   }
 
   :focus-visible {
@@ -81,7 +120,78 @@
   color: var(--color-faint);
 }
 
+/* Type roles (Astryx: roles communicate purpose, adjacent roles stay
+   distinguishable). Use these instead of re-spelling size/weight pairs. */
+.type-section {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+}
+@media (min-width: 40rem) {
+  .type-section {
+    font-size: 2.25rem;
+  }
+}
+
+/* Interaction tint (Astryx: hover combines with the surface, it does not
+   swap in an unrelated opaque block). Layered over whatever bg the element has. */
+.tint-interactive {
+  transition-property: background-image, border-color, color;
+}
+.tint-interactive:hover,
+.tint-interactive:focus-visible {
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--color-brass) 5%, transparent),
+    color-mix(in srgb, var(--color-brass) 5%, transparent)
+  );
+}
+
+/* State system (Astryx: user states are one ladder, not per-component
+   inventions). Rest -> hover -> press -> current, plus disabled. Focus is the
+   global :focus-visible ring. Hover only applies on hover-capable pointers;
+   current page is never signalled by colour alone (underline + aria-current). */
+.link-quiet {
+  color: var(--color-muted);
+}
+@media (hover: hover) {
+  .link-quiet:hover {
+    color: var(--color-text);
+  }
+}
+.link-quiet:active {
+  color: var(--color-faint);
+}
+.link-quiet[aria-current="page"] {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-brass);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 8px;
+}
+[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: 0.55; /* still readable: dimmer than body, not invisible */
+}
+
+/* Section rhythm: one local, group, section ladder. */
+.section-y {
+  padding-block: 4rem;
+}
+@media (min-width: 40rem) {
+  .section-y {
+    padding-block: var(--space-section);
+  }
+}
+
+/* Reduced motion (Astryx: no travel; state changes still land). Position
+   shifts are dropped outright, colour/opacity changes become instant. */
 @media (prefers-reduced-motion: reduce) {
+  .group:hover [class*="group-hover:translate"] {
+    translate: none !important;
+  }
   html {
     scroll-behavior: auto;
   }

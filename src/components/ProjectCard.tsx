@@ -13,7 +13,7 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="group relative block rounded-lg border border-line bg-surface p-6 transition-colors hover:border-brass-dim sm:p-8"
+      className="group tint-interactive relative block rounded-lg border border-line bg-surface p-6 hover:border-brass-dim sm:p-8"
     >
       <div className="flex items-start justify-between gap-4">
         <p className="doc-label">{project.kicker}</p>
