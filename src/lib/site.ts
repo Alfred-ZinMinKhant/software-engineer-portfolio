@@ -75,3 +75,15 @@ export const socials: SocialLink[] = [
     handle: "zinminkhant.alfred@gmail.com",
   },
 ];
+
+// Side projects shown in the footer only (not on Contact, not in structured data).
+export const sideProjects: { label: string; href: string }[] = [
+  {
+    label: "Mingalar Tarot (Android)",
+    href: "https://play.google.com/store/apps/details?id=com.mingalartarot.app",
+  },
+  {
+    label: "Myanmar & Thai Calendar API",
+    href: "https://apify.com/zinminkhant/myanmar-thai-calendar",
+  },
+];
