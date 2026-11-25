@@ -1,6 +1,6 @@
 import { NavLink } from "./NavLink";
 import { Container } from "./Container";
-import { footerNav, sideProjects, site, socials } from "@/lib/site";
+import { footerNav, site, socials } from "@/lib/site";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -27,24 +27,6 @@ export function Footer() {
                   <NavLink href={item.href} className="text-sm">
                     {item.label}
                   </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <nav aria-label="Side projects">
-            <p className="doc-label mb-3">Side projects</p>
-            <ul className="space-y-2">
-              {sideProjects.map((p) => (
-                <li key={p.href}>
-                  <a
-                    href={p.href}
-                    className="link-quiet text-sm transition-colors"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {p.label}
-                  </a>
                 </li>
               ))}
             </ul>

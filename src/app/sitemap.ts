@@ -46,5 +46,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  return [home, ...sections, ...caseStudies, ...dives, ...essays];
+  const sideProjectsPage: MetadataRoute.Sitemap = [
+    { url: `${base}/side-projects`, lastModified, changeFrequency: "monthly", priority: 0.6 },
+  ];
+
+  return [home, ...sections, ...sideProjectsPage, ...caseStudies, ...dives, ...essays];
 }
